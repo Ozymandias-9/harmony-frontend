@@ -9,7 +9,7 @@ export default function Navbar() {
     const pathname = usePathname();
 
     return <nav className="h-full py-6 px-3 border border-border flex flex-col gap-2">
-        <img className="size-9 mb-8 self-center" src="icon.svg" alt="icon" />
+        <img className="size-9 mb-8 self-center" src="/icon.svg" alt="icon" />
         <Link href="/tickets" className={`flex items-center gap-3 text-sm px-3 py-1 rounded-md ${pathname == "/tickets" ? "bg-input/40" : ""}`}>
             <Icon className="text-2xl" icon="lucide:ticket" />
             <span>Tickets</span>

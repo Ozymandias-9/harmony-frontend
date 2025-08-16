@@ -93,7 +93,7 @@ export function DataTable({
 
     return (
         <div className="w-full flex flex-col gap-4 h-full overflow-hidden">
-            <div className="flex justify-between items-center gap-4">
+            <div className="flex justify-between items-center gap-4 pt-2">
                 <div className="flex items-center gap-2">
                     <Icon icon="lucide:search" />
                     <Input
@@ -130,7 +130,7 @@ export function DataTable({
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
-            <div className="rounded-md border bg-white overflow-auto data-table">
+            <div className="rounded-md border bg-white overflow-auto invisible-scrollbar">
                 <Table className="table-fixed w-full border-separate border-spacing-0">
                     <TableHeader className="sticky top-0 z-[1]">
                         {table.getHeaderGroups().map((headerGroup) => (
@@ -153,18 +153,13 @@ export function DataTable({
                                                         { typeof column.columnDef.header === 'string' ? column.columnDef.header : '' }
                                                         <Icon
                                                             icon="lucide:chevron-up" 
-                                                            className={`ml-2 size-4 ${
+                                                            className={`ml-2 size-4 shrink-0 ${
                                                                 column.getIsSorted() === "asc"
                                                                 ? 'rotate-0'
                                                                 : column.getIsSorted() === "desc"
                                                                 ? 'rotate-180'
                                                                 : 'text-disabled'
                                                             }`}
-                                                        />
-                                                        <Icon
-                                                            onClick={(e) => e.stopPropagation()}
-                                                            icon="lucide:filter" 
-                                                            className={`ml-auto size-4`}
                                                         />
                                                     </span>) : headerContext.column.columnDef.header,
                                                     headerContext
@@ -217,7 +212,7 @@ export function DataTable({
                         {table.getFilteredRowModel().rows.length} row(s) selected.
                     </div>
                 }
-                <div className="flex gap-1">
+                <div className="flex gap-1 pb-1">
                     <select
                         className="text-sm "
                         value={table.getState().pagination.pageSize}

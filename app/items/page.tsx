@@ -18,8 +18,8 @@ export default function ItemsPage() {
     const [categories, setCategories] = useState([]);
     const [dialog, setDialog] = useState(false);
     const [dialogSchema, setDialogSchema] = useState<{ dialog: any, form: any }>({ dialog: {}, form: {} });
-    const [confirmationDialog, setConfirmationDialog] = useState(false);
-    const [selectedItem, setSelectedItem] = useState<{ id: number }>({ id: 0 });
+    const [deleteConfirmationDialog, setDeleteConfirmationDialog] = useState(false);
+    const [selectedItem, setSelectedItem] = useState<{ id?: number, name: string, categoryId?: number, category: { name: '' } }>({ name: '', categoryId: undefined, category: { name: '' } });
     const columns = [
         {
             accessorKey: 'id',
@@ -80,7 +80,14 @@ export default function ItemsPage() {
     }, [])
 
     const onMutate = async (data: any, mType: 'create' | 'edit') => {
-        const result = await (mType === 'create' ? createItem(data) : updateItem(selectedItem.id, data));
+        let result;
+        
+        if (mType === 'create') {
+            result = await createItem(data);
+        }
+        else if (selectedItem.id !== undefined) {
+            result = await updateItem(selectedItem.id, data);
+        }
 
         if (result) {
             setDialog(false);
@@ -90,14 +97,15 @@ export default function ItemsPage() {
 
     const triggerDeleteModal = (data: any) => {
         setSelectedItem(data);
-        setConfirmationDialog(true);
+        setDeleteConfirmationDialog(true);
     }
 
     const confirmDeleteItem = async () => {
+        if (selectedItem.id === undefined) return;
         const result = await deleteItem(selectedItem.id);
 
         if (result) {
-            setConfirmationDialog(false);
+            setDeleteConfirmationDialog(false);
             fetchDeps();
         }
     }
@@ -206,8 +214,8 @@ export default function ItemsPage() {
         <Dialog
             title="Confirmation"
             description="Are you sure you want to delete this item?"
-            open={confirmationDialog}
-            onOpenChange={setConfirmationDialog}
+            open={deleteConfirmationDialog}
+            onOpenChange={setDeleteConfirmationDialog}
         >
             <div className="flex flex-col gap-3 text-sm">
                 <div className="flex gap-4 rounded-md bg-red-50 text-red-700 px-4 py-3">
@@ -215,7 +223,7 @@ export default function ItemsPage() {
                     <p>This action is irreversible and you may not recover the data once you confirm.</p>
                 </div>
                 <div className="flex w-full items-center justify-end gap-4">
-                    <Button onClick={() => setConfirmationDialog(false)}variant="default">Cancel</Button>
+                    <Button onClick={() => setDeleteConfirmationDialog(false)}variant="default">Cancel</Button>
                     <Button onClick={() => confirmDeleteItem()}variant="destructive">Confirm</Button>
                 </div>
             </div> 

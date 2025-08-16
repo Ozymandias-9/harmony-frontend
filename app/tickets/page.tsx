@@ -1,21 +1,21 @@
 'use client'
 
 import React, { useEffect, useState } from "react"
-import { getItems } from "@/data/items"
-import { getTickets, createTicket } from "@/data/tickets"
-import Page from "../components/Page";
+import { getTickets, deleteTicketById } from "@/data/tickets"
+import Page from "@/app/components/Page";
 import { Icon } from "@iconify/react";
 import { DataTable } from "@/components/ui/data-table";
-import { Dialog } from "../components/Dialog";
 import { Button } from "@/components/ui/button";
-import { Form } from "../components/Form";
-import { ticketFormSchema } from "@/data/schemas/ticket";
+import { Dialog } from "@/app/components/Dialog";
+import { useRouter } from "next/navigation";
 
 export default function TicketsPage() {
-    const [items, setItems] = useState([]);
+    const router = useRouter();
+    
     const [tickets, setTickets] = useState([]);
-    const [dialog, setDialog] = useState(false);
     const [selectedTicket, setSelectedTicket] = useState<any>(null);
+    const [selectedTicketForDeletion, setSelectedTicketForDeletion] = useState<any>(null);
+    const [deleteConfirmationDialog, setDeleteConfirmationDialog] = useState(false);
     const columns = [
         {
             accessorKey: 'id',
@@ -57,35 +57,57 @@ export default function TicketsPage() {
                 }).format(row.original.purchases?.reduce((a: number, c: any) => (a + parseFloat(c.price)), 0))
             },
             accessorFn: (originalRow: any) => originalRow.purchases?.reduce((a: number, c: any) => a + parseFloat(c.price), 0) ?? 0,
+        },
+        {
+            id: 'actions',
+            size: 70,
+            cell: ({ row }: any) => {
+                return <div className="w-auto self-center flex justify-start gap-2 rounded-md">
+                    <div onClick={() => triggerDeleteModal(row.original)} className="rounded-md transition-all duration-300">
+                        <Icon className="text-lg text-red-500 cursor-pointer" icon="lucide:trash"/>
+                    </div>
+                    <div className="self-stretch bg-gray-300 w-[1px]"></div>
+                    <div onClick={() => triggerEditTicket(row.original)} className="rounded-md transition-all duration-300">
+                        <Icon className="text-lg text-lime-500 cursor-pointer" icon="lucide:pencil"/>
+                    </div>
+                </div>
+            }
         }
     ]
 
-    useEffect(() => {
-        async function init() {
-            setItems((await getItems()).map((c: any) => ({ value: c.id, label: c.name })));
-            setTickets(await getTickets());
-        }
+    const triggerEditTicket = (data: any) => {
+        router.push(`/tickets/edit/${data.id}`)
+    }
 
-        init();
-    }, [])
+    const triggerDeleteModal = (data: any) => {
+        setSelectedTicketForDeletion(data);
+        setDeleteConfirmationDialog(true);
+    }
 
-    const onCreateTicket = async (data: any) => {
-        console.log(data)
-        const result = await createTicket(data);
+    const confirmDeleteTicket = async () => {
+        if (selectedTicketForDeletion.id === undefined) return;
+        const result = await deleteTicketById(selectedTicketForDeletion.id);
 
         if (result) {
-            setItems((await getItems()).map((c: any) => ({ value: c.id, label: c.name })));
-            setTickets(await getTickets());
-            setDialog(false);
+            setDeleteConfirmationDialog(false);
+            fetchDeps();
         }
     }
+
+    const fetchDeps = async () => {
+        setTickets(await getTickets());
+    }
+
+    useEffect(() => {
+        fetchDeps();
+    }, [])
 
     return <Page>
         <h1 className="text-2xl font-semibold">Tickets</h1>
 
         <div className="flex flex-col gap-3">
             <div className="flex justify-end">
-                <Button onClick={() => setDialog(true)}>
+                <Button onClick={() => router.push("/tickets/create")}>
                     <span className="size-4 aspect-square">
                         <Icon icon="lucide:plus" />
                     </span>
@@ -101,7 +123,7 @@ export default function TicketsPage() {
                 </div>
                 {
                     selectedTicket && (
-                        <div className="bg-background relative self-start flex-1 flex flex-col p-4 rounded-lg inset-shadow-sm ring-1 ring-black/5 gap-2">
+                        <div className="bg-background relative self-start flex-1 flex flex-col p-4 rounded-lg border gap-2">
                             <Icon onClick={() => setSelectedTicket(null)} className="size-6 absolute top-4 right-4 cursor-pointer" icon="lucide:x"/>
                             <div className="flex flex-col gap-1">
                                 <h2 className="text-gray-800">{ selectedTicket?.name }</h2>
@@ -141,52 +163,23 @@ export default function TicketsPage() {
             </div>
         </div>
 
+
         <Dialog
-            title="Create Ticket"
-            description="Create a ticket from a shopping trip."
-            open={dialog}
-            onOpenChange={setDialog}
+            title="Confirmation"
+            description="Are you sure you want to delete this ticket?"
+            open={deleteConfirmationDialog}
+            onOpenChange={setDeleteConfirmationDialog}
         >
-            <Form
-                callback={onCreateTicket}
-                fields={[
-                    {
-                        label: 'Name',
-                        field: 'name',
-                        placeholder: "Trip to Walmart",
-                        type: 'text',
-                    },
-                    {
-                        label: 'Store',
-                        field: 'store',
-                        placeholder: "Walmart",
-                        type: 'text',
-                    },
-                    {
-                        label: 'Creation Date',
-                        field: 'creationDate',
-                        placeholder: "22/03/24",
-                        type: 'date',
-                    },
-                    {
-                        label: 'Purchases',
-                        field: 'purchases',
-                        type: 'list',
-                        fields: [
-                            { field: 'price', label: 'Price', type: 'number', placeholder: 'Enter price' },
-                            { field: 'purchaseDate', label: 'Purchase Date', type: 'date' },
-                            { field: 'itemId', label: 'Item ID', type: 'combobox', placeholder: 'Enter item ID', 
-                                inputProps: {
-                                    subject: 'item',
-                                    options: items
-                                },
-                            }
-                        ],
-                    }
-                ]}
-                defaultValues={{ name: '', store: '', creationDate: new Date(), purchases: [] }}
-                formSchema={ticketFormSchema}
-            />
+            <div className="flex flex-col gap-3 text-sm">
+                <div className="flex gap-4 rounded-md bg-red-50 text-red-700 px-4 py-3">
+                    <Icon className="size-10" icon="lucide:circle-alert" />
+                    <p>This action is irreversible and you may not recover the data once you confirm.</p>
+                </div>
+                <div className="flex w-full items-center justify-end gap-4">
+                    <Button onClick={() => setDeleteConfirmationDialog(false)}variant="default">Cancel</Button>
+                    <Button onClick={() => confirmDeleteTicket()}variant="destructive">Confirm</Button>
+                </div>
+            </div> 
         </Dialog>
     </Page>
 }

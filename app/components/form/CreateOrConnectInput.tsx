@@ -65,10 +65,7 @@ export function CreateOrConnectInput({
                                 <FormControl>
                                     <ListObjectInput
                                         value={field.value}
-                                        onChange={(v: any) => {
-                                            console.log(v)
-                                            field.onChange(v)
-                                        }}
+                                        onChange={(v: any) => field.onChange(v)}
                                         fieldDefs={f.fields}
                                     />
                                 </FormControl>

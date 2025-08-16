@@ -16,6 +16,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover"
+import { Icon } from "@iconify/react";
 
 export function Combobox({
   button = false,
@@ -24,12 +25,14 @@ export function Combobox({
   value,
   onChange,
   subject,
+  create,
 }: {
   button?: boolean,
   className?: string,
   options: { value: string; label: string }[];
   value: any;
   onChange: (value: string) => void;
+  create?: (x?: any) => any,
   subject: string,
 }) {
   const [open, setOpen] = React.useState(false);
@@ -53,12 +56,19 @@ export function Combobox({
           <CommandList>
             <CommandEmpty>No results found.</CommandEmpty>
             <CommandGroup>
+              {
+                create ? <CommandItem
+                  onSelect={() => create()}
+                >
+                  <span className="flex items-center gap-2 text-muted-foreground"><Icon icon="lucide:plus"/> Create new {subject}</span>
+                </CommandItem> : null
+              }
               {options.map((option) => (
                 <CommandItem
                   key={option.value}
                   value={option.value}
                   onSelect={() => {
-                    onChange(option.value); // <-- Update form value
+                    onChange(option.value);
                     setOpen(false);
                   }}
                 >

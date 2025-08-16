@@ -48,7 +48,7 @@ type BaseCreateOrConnectField = BaseField<'createOrConnect'> & {
     }[];
 };
 
-type FieldDefinition =
+export type FieldDefinition =
     | BaseField<'text'>
     | BaseField<'number'>
     | BaseField<'combobox'>
@@ -99,10 +99,7 @@ export function Form({
                                         <FormControl>
                                             <ListObjectInput
                                                 value={field.value}
-                                                onChange={(v: any) => {
-                                                    console.log(v)
-                                                    field.onChange(v)
-                                                }}
+                                                onChange={(v: any) => field.onChange(v)}
                                                 fieldDefs={fieldDef.fields}
                                             />
                                         </FormControl>
@@ -129,7 +126,7 @@ export function Form({
                                                 date: (
                                                     <DatePicker
                                                         date={field.value}
-                                                        onChange={(e) => { console.log(e); field.onChange(e) }}
+                                                        onChange={(e) => field.onChange(e)}
                                                     />
                                                 )
                                             }[(fieldDef?.type ?? 'text') as 'text' | 'number' | 'date' | 'combobox']}
