@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from "react"
+import React, { Fragment, useEffect, useState } from "react"
 import { getReceipts, deleteReceiptById } from "@/data/receipts"
 import Page from "@/app/components/Page";
 import { Icon } from "@iconify/react";
@@ -8,6 +8,11 @@ import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/app/components/Dialog";
 import { useRouter } from "next/navigation";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable"
 
 export default function ReceiptsPage() {
     const router = useRouter();
@@ -103,7 +108,7 @@ export default function ReceiptsPage() {
     }, [])
 
     return <Page title="Receipts">
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 overflow-hidden">
             <div className="flex justify-end">
                 <Button onClick={() => router.push("/receipts/create")}>
                     <span className="size-4 aspect-square">
@@ -112,53 +117,60 @@ export default function ReceiptsPage() {
                 </Button>
             </div>
 
-            <div className="flex gap-2">
-                <div className="flex-1 flex">
+            <ResizablePanelGroup direction="horizontal">
+                <ResizablePanel>
                     <DataTable
                         columns={columns}
                         data={receipts}
                     />
-                </div>
+                </ResizablePanel>
                 {
                     selectedReceipt && (
-                        <div className="bg-background relative self-start flex-1 flex flex-col p-4 rounded-lg border gap-2">
-                            <Icon onClick={() => setSelectedReceipt(null)} className="size-6 absolute top-4 right-4 cursor-pointer" icon="lucide:x"/>
-                            <div className="flex flex-col gap-1">
-                                <h2 className="text-gray-800">{ selectedReceipt?.name }</h2>
-                                <p className="text-sm text-gray-400 mb-4">
-                                    { selectedReceipt?.store } - { selectedReceipt?.creationDate ? (new Date(selectedReceipt?.creationDate))?.toISOString().split('T').slice(0,1)[0] : '' }
-                                </p>
-                            </div>
-                            {
-                                selectedReceipt.purchases?.map((sp: any) => (
-                                    <div key={sp.id} className="text-sm rounded-md w-full flex gap-4">
+                        <Fragment>
+                            <ResizableHandle className="mx-4" withHandle />
+                            <ResizablePanel className="bg-background relative flex-1 flex flex-col p-4 rounded-lg border gap-2 overflow-hidden">
+                                <Icon onClick={() => setSelectedReceipt(null)} className="size-6 absolute top-4 right-4 cursor-pointer" icon="lucide:x"/>
+                                <div className="flex flex-col gap-1">
+                                    <h2 className="text-gray-800">{ selectedReceipt?.name }</h2>
+                                    <p className="text-sm text-gray-400 mb-4">
+                                        { selectedReceipt?.store } - { selectedReceipt?.creationDate ? (new Date(selectedReceipt?.creationDate))?.toISOString().split('T').slice(0,1)[0] : '' }
+                                    </p>
+                                </div>
+                                <div className="flex flex-col overflow-y-auto gap-2">
+                                    {
+                                        selectedReceipt.purchases?.map((sp: any) => (
+                                            <div key={sp.id} className="text-sm rounded-md w-full flex items-center gap-2">
+                                                <span>{ parseFloat(sp.quantity).toFixed(2) }x</span>
+                                                <div className="flex items-center gap-2">
+                                                    <span>{ sp.item?.name }</span>
+                                                    <span className="text-xs px-2 py-1 rounded-md bg-gray-100 text-black cursor-pointer">{ sp.item?.category?.name }</span>
+                                                </div>
+                                                <span>* { sp.unitPrice}</span>
+                                                <div className="ml-auto text-right">{ Intl.NumberFormat('en-US', {
+                                                        style: 'currency',
+                                                        currency: 'USD',
+                                                    }).format(sp.price)
+                                                }</div>
+                                            </div>
+                                        ))
+                                    }
+                                </div>
+                                    <div className="text-sm rounded-md w-full flex gap-2">
                                         <div className="flex-1 flex items-center gap-2">
-                                            <span>{ sp.item?.name }</span>
-                                            <span className="text-xs px-2 py-1 rounded-md bg-gray-100 text-black cursor-pointer">{ sp.item?.category?.name }</span>
+                                            Total
                                         </div>
-                                        <div className="text-right">{ Intl.NumberFormat('en-US', {
+                                        <div className="flex-1 text-right">{
+                                            Intl.NumberFormat('en-US', {
                                                 style: 'currency',
                                                 currency: 'USD',
-                                            }).format(sp.price)
+                                            }).format(selectedReceipt.purchases?.reduce((a: number, c: any) => (a + parseFloat(c.price)), 0))
                                         }</div>
                                     </div>
-                                ))
-                            }
-                            <div className="text-sm rounded-md w-full flex gap-2">
-                                <div className="flex-1 flex items-center gap-2">
-                                    Total
-                                </div>
-                                <div className="flex-1 text-right">{
-                                    Intl.NumberFormat('en-US', {
-                                        style: 'currency',
-                                        currency: 'USD',
-                                    }).format(selectedReceipt.purchases?.reduce((a: number, c: any) => (a + parseFloat(c.price)), 0))
-                                }</div>
-                            </div>
-                        </div>
+                            </ResizablePanel>
+                        </Fragment>
                     )
                 }
-            </div>
+            </ResizablePanelGroup>
         </div>
 
 
