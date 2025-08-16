@@ -17,7 +17,6 @@ async function deleteItem(itemId: number) {
 }
 
 async function updateItem(itemId: number, body: any) {
-    console.log(itemId, body)
     return await (new ApiCall()).put(`items/${itemId}`).send(body);
 }
 
