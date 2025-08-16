@@ -113,11 +113,6 @@ export default function ReceiptForm({
     }
 
     return <Fragment>
-        <h1 className="text-2xl font-semibold">Receipts</h1>
-        <Link href="/receipts" className="text-muted-foreground flex items-center gap-2">
-            <Icon icon="lucide:chevron-left"/>
-            Back
-        </Link>
         <FormRoot {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-8 rounded-md border bg-white overflow-hidden p-4">
                 <div className="flex gap-4 justify-between">
@@ -214,9 +209,15 @@ export default function ReceiptForm({
                                                 }
                                             }}
                                             fieldDefs={[
-                                                { field: 'quantity', label: 'Quantity', type: 'number', placeholder: 'Enter quantity' },
-                                                { field: 'unitPrice', label: 'Unit Price', type: 'number', placeholder: 'Enter unit price' },
-                                                { field: 'price', label: 'Price', type: 'number', placeholder: 'Enter price' },
+                                                { field: 'quantity', label: 'Quantity', type: 'number', placeholder: 'Enter quantity',
+                                                    render: (value: any) => parseFloat(value).toFixed(2)
+                                                },
+                                                { field: 'unitPrice', label: 'Unit Price', type: 'number', placeholder: 'Enter unit price',
+                                                    render: (value: any) => parseFloat(value).toFixed(2)
+                                                },
+                                                { field: 'price', label: 'Price', type: 'number', placeholder: 'Enter price',
+                                                    render: (value: any) => parseFloat(value).toFixed(2)
+                                                 },
                                                 { field: 'itemId', label: 'Item ID', type: 'combobox', 
                                                     inputProps: {
                                                         subject: 'item',

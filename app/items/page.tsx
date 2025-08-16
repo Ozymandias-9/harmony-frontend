@@ -181,9 +181,7 @@ export default function ItemsPage() {
         setDialog(open);
     }
 
-    return <Page>
-        <h1 className="text-2xl font-semibold">Items</h1>
-
+    return <Page title="Items">
         <div className="overflow-y-auto flex flex-col gap-3">
             <div className="flex justify-end">
                 <Button onClick={() => triggerMutationDialog(true, 'create')}>

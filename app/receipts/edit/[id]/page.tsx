@@ -7,6 +7,7 @@ import Page from "@/app/components/Page";
 import ReceiptForm from "../../ReceiptForm";
 import { getReceiptById, updateReceiptById } from "@/data/receipts";
 import { receiptFormSchema } from "@/data/schemas/receipt";
+import Breadcrumb from "@/app/components/Breadcrumb";
 
 export default function EditReceipt() {
     const { id } = useParams();
@@ -26,7 +27,8 @@ export default function EditReceipt() {
     }, [])
 
     if (receipt !== undefined) {
-        return <Page>
+        return <Page title="Receipts">
+            <Breadcrumb items={[{ value: "Receipts", link: { href: "/receipts"} }, { value: receipt.name }]} />
             <ReceiptForm type="edit" defaultValues={receipt} mutationMethod={(data: any) => updateReceiptById(receiptId, data)}/>
         </Page>
     }

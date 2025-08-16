@@ -102,9 +102,7 @@ export default function ReceiptsPage() {
         fetchDeps();
     }, [])
 
-    return <Page>
-        <h1 className="text-2xl font-semibold">Receipts</h1>
-
+    return <Page title="Receipts">
         <div className="flex flex-col gap-3">
             <div className="flex justify-end">
                 <Button onClick={() => router.push("/receipts/create")}>
