@@ -8,7 +8,7 @@ const purchaseSchema = z.object({
   itemId: z.coerce.number().nullable().optional(),
 });
 
-export const ticketFormSchema = z.object({
+export const receiptFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
   store: z.string().min(1, "Store is required"),
   creationDate: z.date(),
@@ -20,4 +20,4 @@ export const ticketFormSchema = z.object({
     ),
 });
 
-export type TicketFormValues = z.infer<typeof ticketFormSchema>;
+export type ReceiptFormValues = z.infer<typeof receiptFormSchema>;

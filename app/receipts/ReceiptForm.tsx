@@ -19,7 +19,7 @@ import {
 import { Form, type FieldDefinition } from "@/app/components/Form";
 import { ListObjectInput } from '@/app/components/form/ListObjectInput';
 import { itemFormSchema } from "@/data/schemas/item";
-import { ticketFormSchema } from "@/data/schemas/ticket";
+import { receiptFormSchema } from "@/data/schemas/receipt";
 import { getItems, createItem } from "@/data/items";
 import { getCategories } from "@/data/categories";
 import { useRouter } from "next/navigation";
@@ -32,7 +32,7 @@ export default function ReceiptForm({
     mutationMethod,
 }:
 {
-    defaultValues?: z.infer<typeof ticketFormSchema>,
+    defaultValues?: z.infer<typeof receiptFormSchema>,
     type: "edit" | "create",
     mutationMethod: Function,
 }) {
@@ -41,9 +41,9 @@ export default function ReceiptForm({
     const [categories, setCategories] = useState([]);
     const [dialog, setDialog] = useState(false);
     const [selectedItem, setSelectedItem] = useState<{ name: string, categoryId: number | undefined, category: { name: '' } }>({ name: '', categoryId: undefined, category: { name: '' } });
-    const [ticketCreated, setTicketCreated] = useState<boolean>(false);
-    const form = useForm<z.infer<typeof ticketFormSchema>>({
-        resolver: zodResolver(ticketFormSchema),
+    const [receiptCreated, setReceiptCreated] = useState<boolean>(false);
+    const form = useForm<z.infer<typeof receiptFormSchema>>({
+        resolver: zodResolver(receiptFormSchema),
         defaultValues: defaultValues ?? { name: '', store: '', creationDate: new Date(), purchases: [] },
     });
 
@@ -56,9 +56,9 @@ export default function ReceiptForm({
         fetchDeps();
     }, [])
     
-    const onSubmit = async (data: z.infer<typeof ticketFormSchema>) => {
+    const onSubmit = async (data: z.infer<typeof receiptFormSchema>) => {
         await mutationMethod(data);
-        setTicketCreated(true);
+        setReceiptCreated(true);
     };
 
     const onMutate = async (data: any) => {
@@ -71,12 +71,12 @@ export default function ReceiptForm({
     }
 
     const goToMainPage = () => {
-        setTicketCreated(false);
-        router.push("/tickets")
+        setReceiptCreated(false);
+        router.push("/receipts")
     }
     
     const continueHere = () => {
-        setTicketCreated(false);
+        setReceiptCreated(false);
         setSelectedItem({ name: '', categoryId: undefined, category: { name: '' } });
         form.reset();
     }
@@ -114,7 +114,7 @@ export default function ReceiptForm({
 
     return <Fragment>
         <h1 className="text-2xl font-semibold">Receipts</h1>
-        <Link href="/tickets" className="text-muted-foreground flex items-center gap-2">
+        <Link href="/receipts" className="text-muted-foreground flex items-center gap-2">
             <Icon icon="lucide:chevron-left"/>
             Back
         </Link>
@@ -252,9 +252,9 @@ export default function ReceiptForm({
 
 
         <Dialog
-            title={`Ticket ${ type } successfully`}
-            description={`Ticket was ${ type } successfully! What do you want to do next?`}
-            open={ticketCreated}
+            title={`Receipt ${ type } successfully`}
+            description={`Receipt was ${ type } successfully! What do you want to do next?`}
+            open={receiptCreated}
             onOpenChange={goToMainPage}
         >
             <div className="flex justify-end gap-4">

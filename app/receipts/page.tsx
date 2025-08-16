@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from "react"
-import { getTickets, deleteTicketById } from "@/data/tickets"
+import { getReceipts, deleteReceiptById } from "@/data/receipts"
 import Page from "@/app/components/Page";
 import { Icon } from "@iconify/react";
 import { DataTable } from "@/components/ui/data-table";
@@ -9,12 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Dialog } from "@/app/components/Dialog";
 import { useRouter } from "next/navigation";
 
-export default function TicketsPage() {
+export default function ReceiptsPage() {
     const router = useRouter();
     
-    const [tickets, setTickets] = useState([]);
-    const [selectedTicket, setSelectedTicket] = useState<any>(null);
-    const [selectedTicketForDeletion, setSelectedTicketForDeletion] = useState<any>(null);
+    const [receipts, setReceipts] = useState([]);
+    const [selectedReceipt, setSelectedReceipt] = useState<any>(null);
+    const [selectedReceiptForDeletion, setSelectedReceiptForDeletion] = useState<any>(null);
     const [deleteConfirmationDialog, setDeleteConfirmationDialog] = useState(false);
     const columns = [
         {
@@ -27,7 +27,7 @@ export default function TicketsPage() {
             accessorKey: 'name',
             header: 'Name',
             cell: ({ row, getValue }: any) => {
-                return <div className="overflow-hidden text-ellipsis underline text-blue-500 cursor-pointer" onClick={() => setSelectedTicket(row.original)}>
+                return <div className="overflow-hidden text-ellipsis underline text-blue-500 cursor-pointer" onClick={() => setSelectedReceipt(row.original)}>
                     { getValue() }
                 </div>;
             },
@@ -67,7 +67,7 @@ export default function TicketsPage() {
                         <Icon className="text-lg text-red-500 cursor-pointer" icon="lucide:trash"/>
                     </div>
                     <div className="self-stretch bg-gray-300 w-[1px]"></div>
-                    <div onClick={() => triggerEditTicket(row.original)} className="rounded-md transition-all duration-300">
+                    <div onClick={() => triggerEditReceipt(row.original)} className="rounded-md transition-all duration-300">
                         <Icon className="text-lg text-lime-500 cursor-pointer" icon="lucide:pencil"/>
                     </div>
                 </div>
@@ -75,18 +75,18 @@ export default function TicketsPage() {
         }
     ]
 
-    const triggerEditTicket = (data: any) => {
-        router.push(`/tickets/edit/${data.id}`)
+    const triggerEditReceipt = (data: any) => {
+        router.push(`/receipts/edit/${data.id}`)
     }
 
     const triggerDeleteModal = (data: any) => {
-        setSelectedTicketForDeletion(data);
+        setSelectedReceiptForDeletion(data);
         setDeleteConfirmationDialog(true);
     }
 
-    const confirmDeleteTicket = async () => {
-        if (selectedTicketForDeletion.id === undefined) return;
-        const result = await deleteTicketById(selectedTicketForDeletion.id);
+    const confirmDeleteReceipt = async () => {
+        if (selectedReceiptForDeletion.id === undefined) return;
+        const result = await deleteReceiptById(selectedReceiptForDeletion.id);
 
         if (result) {
             setDeleteConfirmationDialog(false);
@@ -95,7 +95,7 @@ export default function TicketsPage() {
     }
 
     const fetchDeps = async () => {
-        setTickets(await getTickets());
+        setReceipts(await getReceipts());
     }
 
     useEffect(() => {
@@ -103,11 +103,11 @@ export default function TicketsPage() {
     }, [])
 
     return <Page>
-        <h1 className="text-2xl font-semibold">Tickets</h1>
+        <h1 className="text-2xl font-semibold">Receipts</h1>
 
         <div className="flex flex-col gap-3">
             <div className="flex justify-end">
-                <Button onClick={() => router.push("/tickets/create")}>
+                <Button onClick={() => router.push("/receipts/create")}>
                     <span className="size-4 aspect-square">
                         <Icon icon="lucide:plus" />
                     </span>
@@ -118,21 +118,21 @@ export default function TicketsPage() {
                 <div className="flex-1 flex">
                     <DataTable
                         columns={columns}
-                        data={tickets}
+                        data={receipts}
                     />
                 </div>
                 {
-                    selectedTicket && (
+                    selectedReceipt && (
                         <div className="bg-background relative self-start flex-1 flex flex-col p-4 rounded-lg border gap-2">
-                            <Icon onClick={() => setSelectedTicket(null)} className="size-6 absolute top-4 right-4 cursor-pointer" icon="lucide:x"/>
+                            <Icon onClick={() => setSelectedReceipt(null)} className="size-6 absolute top-4 right-4 cursor-pointer" icon="lucide:x"/>
                             <div className="flex flex-col gap-1">
-                                <h2 className="text-gray-800">{ selectedTicket?.name }</h2>
+                                <h2 className="text-gray-800">{ selectedReceipt?.name }</h2>
                                 <p className="text-sm text-gray-400 mb-4">
-                                    { selectedTicket?.store } - { selectedTicket?.creationDate ? (new Date(selectedTicket?.creationDate))?.toISOString().split('T').slice(0,1)[0] : '' }
+                                    { selectedReceipt?.store } - { selectedReceipt?.creationDate ? (new Date(selectedReceipt?.creationDate))?.toISOString().split('T').slice(0,1)[0] : '' }
                                 </p>
                             </div>
                             {
-                                selectedTicket.purchases?.map((sp: any) => (
+                                selectedReceipt.purchases?.map((sp: any) => (
                                     <div key={sp.id} className="text-sm rounded-md w-full flex gap-4">
                                         <div className="flex-1 flex items-center gap-2">
                                             <span>{ sp.item?.name }</span>
@@ -154,7 +154,7 @@ export default function TicketsPage() {
                                     Intl.NumberFormat('en-US', {
                                         style: 'currency',
                                         currency: 'USD',
-                                    }).format(selectedTicket.purchases?.reduce((a: number, c: any) => (a + parseFloat(c.price)), 0))
+                                    }).format(selectedReceipt.purchases?.reduce((a: number, c: any) => (a + parseFloat(c.price)), 0))
                                 }</div>
                             </div>
                         </div>
@@ -166,7 +166,7 @@ export default function TicketsPage() {
 
         <Dialog
             title="Confirmation"
-            description="Are you sure you want to delete this ticket?"
+            description="Are you sure you want to delete this receipt?"
             open={deleteConfirmationDialog}
             onOpenChange={setDeleteConfirmationDialog}
         >
@@ -177,7 +177,7 @@ export default function TicketsPage() {
                 </div>
                 <div className="flex w-full items-center justify-end gap-4">
                     <Button onClick={() => setDeleteConfirmationDialog(false)}variant="default">Cancel</Button>
-                    <Button onClick={() => confirmDeleteTicket()}variant="destructive">Confirm</Button>
+                    <Button onClick={() => confirmDeleteReceipt()}variant="destructive">Confirm</Button>
                 </div>
             </div> 
         </Dialog>

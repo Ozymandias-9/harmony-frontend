@@ -2,10 +2,10 @@
 
 import Page from "@/app/components/Page";
 import ReceiptForm from "../ReceiptForm";
-import { createTicket } from "@/data/tickets";
+import { createReceipt } from "@/data/receipts";
 
 export default function CreateReceipt() {
     return <Page>
-        <ReceiptForm type="create" mutationMethod={createTicket}/>
+        <ReceiptForm type="create" mutationMethod={createReceipt}/>
     </Page>
 }
