@@ -47,7 +47,7 @@ export function ListObjectInput({
   }
 
   const saveItem = () => {
-    if (Object.keys(currentItem).length >= fieldDefs.length && currentEditIndex) {
+    if (Object.keys(currentItem).length >= fieldDefs.length && currentEditIndex !== undefined) {
       let newValue = [...value];
       newValue[currentEditIndex] = currentItem;
       onChange(newValue)
@@ -112,8 +112,8 @@ export function ListObjectInput({
             }[f.type]}
           </div>
         })}
-        <Button type="button" onClick={() => (currentEditIndex ? saveItem : addItem)()}>
-          { currentEditIndex ? "Save" : <Icon icon="lucide:plus" className="w-4 h-4" /> }
+        <Button type="button" onClick={() => (currentEditIndex !== undefined ? saveItem : addItem)()}>
+          { currentEditIndex !== undefined ? "Save" : <Icon icon="lucide:plus" className="w-4 h-4" /> }
         </Button>
       </div>
 
