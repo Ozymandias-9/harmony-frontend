@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState, useEffect } from "react"
-import { getItems, createItem, updateItemsCategory, deleteItemById, updateItemById } from "@/data/items"
 import { getCategories } from "@/data/categories"
 import Page from "@/app/components/Page";
 import { Icon } from "@iconify/react";
@@ -9,16 +8,15 @@ import { DataTable } from "@/components/ui/data-table";
 import { Dialog } from "../components/Dialog";
 import { Button } from "@/components/ui/button";
 import { Form } from "../components/Form";
-import { itemFormSchema } from "@/data/schemas/item";
-import { Combobox } from "../components/Combobox"; 
+import { categoryFormSchema } from "@/data/schemas/category";
+import { createCategory, updateCategoryById, deleteCategoryById } from "@/data/categories";
 
-export default function ItemsPage() {
-    const [items, setItems] = useState([]);
+export default function CategoriesPage() {
     const [categories, setCategories] = useState([]);
     const [dialog, setDialog] = useState(false);
     const [dialogSchema, setDialogSchema] = useState<{ dialog: any, form: any }>({ dialog: {}, form: {} });
     const [deleteConfirmationDialog, setDeleteConfirmationDialog] = useState(false);
-    const [selectedItem, setSelectedItem] = useState<{ id?: number, name: string, categoryId?: number, category: { name: '' } }>({ name: '', categoryId: undefined, category: { name: '' } });
+    const [selectedCategory, setSelectedCategory] = useState<{ id?: number, name: string, categoryId?: number, category: { name: '' } }>({ name: '', categoryId: undefined, category: { name: '' } });
     const columns = [
         {
             accessorKey: 'id',
@@ -30,27 +28,6 @@ export default function ItemsPage() {
             accessorKey: 'name',
             header: 'Name',
             sortable: true,
-        },
-        {
-            accessorKey: 'category',
-            header: 'Category',
-            cell: ({ row }: any) => {
-                const data = row.original;
-                return <Combobox
-                    className={`px-2 py-1 text-xs rounded-md bg-accent text-foreground ${!data?.category?.id ? 'text-gray-400 hover:text-gray-600' : 'hover:text-gray-600'} cursor-pointer`}
-                    subject="category"
-                    options={categories}
-                    value={data?.category?.id ?? null}
-                    onChange={async (newValue) => {
-                        const result = await updateItemsCategory(row.original.id, parseInt(newValue));
-
-                        if (result) {
-                            setItems(await getItems());
-                        }
-                    }}
-                />;
-            },
-            accessorFn: (originalRow: any) => originalRow.category?.name,
         },
         {
             id: 'actions',
@@ -70,8 +47,7 @@ export default function ItemsPage() {
     ]
 
     const fetchDeps = async () => {
-        setItems(await getItems());
-        setCategories((await getCategories()).map((c: any) => ({ value: c.id, label: c.name })));
+        setCategories(await getCategories());
     }
 
     useEffect(() => {
@@ -82,10 +58,10 @@ export default function ItemsPage() {
         let result;
         
         if (mType === 'create') {
-            result = await createItem(data);
+            result = await createCategory(data);
         }
-        else if (selectedItem.id !== undefined) {
-            result = await updateItemById(selectedItem.id, data);
+        else if (selectedCategory.id !== undefined) {
+            result = await updateCategoryById(selectedCategory.id, data);
         }
 
         if (result) {
@@ -95,13 +71,13 @@ export default function ItemsPage() {
     }
 
     const triggerDeleteModal = (data: any) => {
-        setSelectedItem(data);
+        setSelectedCategory(data);
         setDeleteConfirmationDialog(true);
     }
 
     const confirmDeleteItem = async () => {
-        if (selectedItem.id === undefined) return;
-        const result = await deleteItemById(selectedItem.id);
+        if (selectedCategory.id === undefined) return;
+        const result = await deleteCategoryById(selectedCategory.id);
 
         if (result) {
             setDeleteConfirmationDialog(false);
@@ -109,10 +85,10 @@ export default function ItemsPage() {
         }
     }
     
-    const createItemFormShape = {
+    const createCategoryFormShape = {
         dialog: {
-            title: 'Create Item',
-            description: 'Create an item you bought.',
+            title: 'Create Category',
+            description: 'Create a category for your items.',
         },
         form: {
             mutationType: 'create',
@@ -120,31 +96,18 @@ export default function ItemsPage() {
                 {
                     label: 'Name',
                     field: 'name',
-                    placeholder: "Leche Alpura 1.8 lt",
+                    placeholder: "Health",
                     type: 'text',
                 },
-                {
-                    type: "createOrConnect",
-                    field: "categoryId",
-                    label: "Category",
-                    inputProps: {
-                        subject: 'category',
-                        options: categories
-                    },
-                    createKey: 'category',
-                    createFields: [
-                        { field: "name", label: "Name", type: "text", placeholder: "New category name" }
-                    ]
-                },
             ],
-            formSchema: itemFormSchema,
+            formSchema: categoryFormSchema,
         }
     }
 
-    const editItemFormShape = {
+    const editCategoryFormShape = {
         dialog: {
-            title: 'Edit Item',
-            description: 'Edit an item you bought.',
+            title: 'Edit Category',
+            description: 'Edit a category for your items.',
         },
         form: {
             mutationType: 'edit',
@@ -152,35 +115,26 @@ export default function ItemsPage() {
                 {
                     label: 'Name',
                     field: 'name',
-                    placeholder: "Leche Alpura 1.8 lt",
+                    placeholder: "Health",
                     type: 'text',
-                },
-                {
-                    type: "combobox",
-                    field: "categoryId",
-                    label: "Category",
-                    inputProps: {
-                        subject: 'category',
-                        options: categories
-                    },
-                },
+                }
             ],
-            formSchema: itemFormSchema,
+            formSchema: categoryFormSchema,
         }
     }
 
     const dialogSchemas: { 'create': any, 'edit': any } = {
-        'create': createItemFormShape,
-        'edit': editItemFormShape,
+        'create': createCategoryFormShape,
+        'edit': editCategoryFormShape,
     }
 
     const triggerMutationDialog = (open: boolean, dType: 'create' | 'edit', data: any = { name: '', categoryId: undefined, category: { name: '' } },) => {
-        setSelectedItem(data);
+        setSelectedCategory(data);
         setDialogSchema(dialogSchemas[dType])
         setDialog(open);
     }
 
-    return <Page title="Items">
+    return <Page title="Categories">
         <div className="overflow-y-auto flex flex-col gap-3">
             <div className="flex justify-end">
                 <Button onClick={() => triggerMutationDialog(true, 'create')}>
@@ -191,7 +145,7 @@ export default function ItemsPage() {
             </div>
             <DataTable
                 columns={columns}
-                data={items}
+                data={categories}
             />
         </div>
 
@@ -204,13 +158,13 @@ export default function ItemsPage() {
             <Form
                 callback={(v) => onMutate(v, dialogSchema.form.mutationType)}
                 fields={dialogSchema.form.fields}
-                defaultValues={selectedItem}
+                defaultValues={selectedCategory}
                 formSchema={dialogSchema.form.formSchema}
             />
         </Dialog>
         <Dialog
             title="Confirmation"
-            description="Are you sure you want to delete this item?"
+            description="Are you sure you want to delete this category?"
             open={deleteConfirmationDialog}
             onOpenChange={setDeleteConfirmationDialog}
         >

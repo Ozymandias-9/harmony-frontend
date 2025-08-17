@@ -218,7 +218,7 @@ export default function ReceiptForm({
                                                 { field: 'price', label: 'Price', type: 'number', placeholder: 'Enter price',
                                                     render: (value: any) => parseFloat(value).toFixed(2)
                                                  },
-                                                { field: 'itemId', label: 'Item ID', type: 'combobox', 
+                                                { field: 'itemId', label: 'Item', type: 'combobox', 
                                                     inputProps: {
                                                         subject: 'item',
                                                         options: items,

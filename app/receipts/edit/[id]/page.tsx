@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { z } from "zod";
 import Page from "@/app/components/Page";
-import ReceiptForm from "../../ReceiptForm";
+import ReceiptForm from "../../../components/receipts/ReceiptForm";
 import { getReceiptById, updateReceiptById } from "@/data/receipts";
 import { receiptFormSchema } from "@/data/schemas/receipt";
 import Breadcrumb from "@/app/components/Breadcrumb";

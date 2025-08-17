@@ -18,5 +18,9 @@ export default function Navbar() {
             <Icon className="text-2xl" icon="tabler:package" />
             <span>Items</span>
         </Link>
+        <Link href="/categories" className={`flex items-center gap-3 text-sm px-3 py-1 rounded-md ${pathname == "/categories" ? "bg-input/40" : ""}`}>
+            <Icon className="text-2xl" icon="tabler:category" />
+            <span>Categories</span>
+        </Link>
     </nav>
 }
