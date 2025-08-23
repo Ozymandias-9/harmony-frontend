@@ -16,6 +16,10 @@ async function updateReceiptById(id: number, body: any) {
     return await (new ApiCall()).put(`receipts/${id}`).send(body);
 }
 
+async function updateReceiptCategory(receiptId: number, categoryId: number) {
+    return await (new ApiCall()).put(`receipts/${receiptId}/category/${categoryId}`).send();
+}
+
 async function deleteReceiptById(id: number) {
     return await (new ApiCall()).delete(`receipts/${id}`).send();
 }
@@ -25,5 +29,6 @@ export {
     createReceipt,
     getReceiptById,
     updateReceiptById,
+    updateReceiptCategory,
     deleteReceiptById,
 }

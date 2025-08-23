@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from "react"
-import { getItems, createItem, updateItemsCategory, deleteItemById, updateItemById } from "@/data/items"
+import { getItems, createItem, updateItemCategory, deleteItemById, updateItemById } from "@/data/items"
 import { getCategories } from "@/data/categories"
 import Page from "@/app/components/Page";
 import { Icon } from "@iconify/react";
@@ -42,7 +42,7 @@ export default function ItemsPage() {
                     options={categories}
                     value={data?.category?.id ?? null}
                     onChange={async (newValue) => {
-                        const result = await updateItemsCategory(row.original.id, parseInt(newValue));
+                        const result = await updateItemCategory(row.original.id, parseInt(newValue));
 
                         if (result) {
                             setItems(await getItems());
@@ -71,7 +71,7 @@ export default function ItemsPage() {
 
     const fetchDeps = async () => {
         setItems(await getItems());
-        setCategories((await getCategories()).map((c: any) => ({ value: c.id, label: c.name })));
+        setCategories((await getCategories({ entity: "item" })).map((c: any) => ({ value: c.id, label: c.name })));
     }
 
     useEffect(() => {

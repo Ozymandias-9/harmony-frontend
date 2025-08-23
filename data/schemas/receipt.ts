@@ -18,6 +18,13 @@ export const receiptFormSchema = z.object({
     .transform((arr) =>
       arr?.filter((p) => Object.values(p).some((v) => v !== undefined && v !== null))
     ),
+  categoryId: z.number().nullable().optional(),
+  category: z
+    .object({
+      name: z.string().optional(),
+    })
+    .nullable()
+    .optional(),
 });
 
 export type ReceiptFormValues = z.infer<typeof receiptFormSchema>;

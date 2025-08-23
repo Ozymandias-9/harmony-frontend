@@ -125,7 +125,7 @@ export function ListObjectInput({
           <div className="flex-1 uppercase text-gray-500 text-center text-xs">Actions</div>
         </div>
         {value?.map((item, index) => (
-          <div key={index} className="flex gap-2 h-8">
+          <div key={index} className="flex items-center gap-2 h-8">
             {fieldDefs.map((f) => (
               <div key={f.field} className="flex-1 w-full text-center text-sm whitespace-nowrap overflow-hidden text-ellipsis">
                 { f.type === 'date' ? (item[f.field]).toISOString().split('T')[0] : (f.render ? f.render(item[f.field]) : String(item[f.field])) }

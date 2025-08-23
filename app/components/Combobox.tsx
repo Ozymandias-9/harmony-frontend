@@ -1,6 +1,6 @@
 "use client"
 
-import React, { ReactNode } from "react"
+import React from "react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -26,6 +26,7 @@ export function Combobox({
   onChange,
   subject,
   create,
+  remove = false,
 }: {
   button?: boolean,
   className?: string,
@@ -34,6 +35,7 @@ export function Combobox({
   onChange: (value: string) => void;
   create?: (x?: any) => any,
   subject: string,
+  remove?: boolean,
 }) {
   const [open, setOpen] = React.useState(false);
 

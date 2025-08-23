@@ -32,7 +32,7 @@ export default function Breadcrumb({
                             <TargetChild {...item.link}>{ item.render ? item.render(item.value) : item.value }</TargetChild>
                         </BreadcrumbItem>
                         {
-                            index < items.length - 1 && <BreadcrumbSeparator><Icon icon="tabler:slash" /></BreadcrumbSeparator>
+                            index < items.length - 1 && <BreadcrumbSeparator>/</BreadcrumbSeparator>
                         }
                     </Fragment>
                 })

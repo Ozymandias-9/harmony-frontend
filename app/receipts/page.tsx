@@ -1,12 +1,14 @@
 'use client'
 
 import React, { Fragment, useEffect, useState } from "react"
-import { getReceipts, deleteReceiptById } from "@/data/receipts"
+import { getReceipts, deleteReceiptById, updateReceiptCategory } from "@/data/receipts"
+import { getCategories } from "@/data/categories";
 import Page from "@/app/components/Page";
 import { Icon } from "@iconify/react";
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/app/components/Dialog";
+import { Combobox } from "../components/Combobox";
 import { useRouter } from "next/navigation";
 import {
   ResizableHandle,
@@ -18,6 +20,7 @@ export default function ReceiptsPage() {
     const router = useRouter();
     
     const [receipts, setReceipts] = useState([]);
+    const [categories, setCategories] = useState([]);
     const [selectedReceipt, setSelectedReceipt] = useState<any>(null);
     const [selectedReceiptForDeletion, setSelectedReceiptForDeletion] = useState<any>(null);
     const [deleteConfirmationDialog, setDeleteConfirmationDialog] = useState(false);
@@ -37,6 +40,27 @@ export default function ReceiptsPage() {
                 </div>;
             },
             sortable: true,
+        },
+        {
+            accessorKey: 'category',
+            header: 'Category',
+            cell: ({ row }: any) => {
+                const data = row.original;
+                return <Combobox
+                    className={`px-2 py-1 text-xs rounded-md bg-accent text-foreground ${!data?.category?.id ? 'text-gray-400 hover:text-gray-600' : 'hover:text-gray-600'} cursor-pointer`}
+                    subject="category"
+                    options={categories}
+                    value={data?.category?.id ?? null}
+                    onChange={async (newValue) => {
+                        const result = await updateReceiptCategory(row.original.id, parseInt(newValue));
+
+                        if (result) {
+                            setReceipts(await getReceipts());
+                        }
+                    }}
+                />;
+            },
+            accessorFn: (originalRow: any) => originalRow.category?.name,
         },
         {
             accessorKey: 'creationDate',
@@ -101,6 +125,7 @@ export default function ReceiptsPage() {
 
     const fetchDeps = async () => {
         setReceipts(await getReceipts());
+        setCategories((await getCategories({ entity: "receipt" })).map((c: any) => ({ value: c.id, label: c.name })));
     }
 
     useEffect(() => {

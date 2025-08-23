@@ -8,7 +8,7 @@ async function createItem(body: any) {
     return await (new ApiCall()).post('items').send(body);
 }
 
-async function updateItemsCategory(itemId: number, categoryId: number) {
+async function updateItemCategory(itemId: number, categoryId: number) {
     return await (new ApiCall()).put(`items/${itemId}/category/${categoryId}`).send();
 }
 
@@ -21,5 +21,5 @@ async function updateItemById(id: number, body: any) {
 }
 
 export {
-    getItems, createItem, updateItemsCategory, deleteItemById, updateItemById
+    getItems, createItem, updateItemCategory, deleteItemById, updateItemById
 }

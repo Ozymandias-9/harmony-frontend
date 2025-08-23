@@ -1,7 +1,7 @@
 import { ApiCall } from "./api-call";
 
-async function getCategories() {
-    return await (new ApiCall()).get('categories').send();
+async function getCategories(params?: any) {
+    return await (new ApiCall()).get('categories').send({}, { params });
 }
 
 async function createCategory(body: any) {

@@ -20,11 +20,12 @@ import { Form, type FieldDefinition } from "@/app/components/Form";
 import { ListObjectInput } from '@/app/components/form/ListObjectInput';
 import { itemFormSchema } from "@/data/schemas/item";
 import { receiptFormSchema } from "@/data/schemas/receipt";
+import { categoryFormSchema } from "@/data/schemas/category";
 import { getItems, createItem } from "@/data/items";
-import { getCategories } from "@/data/categories";
+import { createCategory, getCategories } from "@/data/categories";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { Icon } from "@iconify/react";
+import { Combobox } from "../Combobox";
 
 export default function ReceiptForm({
     defaultValues,
@@ -40,7 +41,8 @@ export default function ReceiptForm({
     const [items, setItems] = useState([]);
     const [categories, setCategories] = useState([]);
     const [dialog, setDialog] = useState(false);
-    const [selectedItem, setSelectedItem] = useState<{ name: string, categoryId: number | undefined, category: { name: '' } }>({ name: '', categoryId: undefined, category: { name: '' } });
+    const [categoryCreationDialog, setCategoryCreationDialog] = useState(false);
+    const [selectedItem, setSelectedItem] = useState<{ name: string, categoryId: number | undefined, category: { name: '', entity: string } }>({ name: '', categoryId: undefined, category: { name: '', entity: "receipt" } });
     const [receiptCreated, setReceiptCreated] = useState<boolean>(false);
     const form = useForm<z.infer<typeof receiptFormSchema>>({
         resolver: zodResolver(receiptFormSchema),
@@ -49,7 +51,7 @@ export default function ReceiptForm({
 
     async function fetchDeps() {
         setItems((await getItems()).map((c: any) => ({ value: c.id, label: c.name })));
-        setCategories((await getCategories()).map((c: any) => ({ value: c.id, label: c.name })));
+        setCategories((await getCategories({ entity: "receipt" })).map((c: any) => ({ value: c.id, label: c.name })));
     }
 
     useEffect(() => {
@@ -70,6 +72,15 @@ export default function ReceiptForm({
         }
     }
 
+    const onCreateCategory = async (data: any) => {
+        const result = await createCategory(data);
+
+        if (result) {
+            setCategoryCreationDialog(false);
+            fetchDeps();
+        }
+    }
+
     const goToMainPage = () => {
         setReceiptCreated(false);
         router.push("/receipts")
@@ -77,7 +88,7 @@ export default function ReceiptForm({
     
     const continueHere = () => {
         setReceiptCreated(false);
-        setSelectedItem({ name: '', categoryId: undefined, category: { name: '' } });
+        setSelectedItem({ name: '', categoryId: undefined, category: { name: '', entity: "receipt" } });
         form.reset();
     }
 
@@ -112,6 +123,25 @@ export default function ReceiptForm({
         }
     }
 
+    const createCategoryFormShape = {
+        dialog: {
+            title: 'Create Category',
+            description: 'Create a category for your items.',
+        },
+        form: {
+            mutationType: 'create',
+            fields: [
+                {
+                    label: 'Name',
+                    field: 'name',
+                    placeholder: "Health",
+                    type: 'text',
+                },
+            ],
+            formSchema: categoryFormSchema,
+        }
+    }
+
     return <Fragment>
         <FormRoot {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-8 rounded-md border bg-white overflow-hidden p-4">
@@ -124,55 +154,23 @@ export default function ReceiptForm({
                         Save
                     </Button>
                 </div>
-                <div className="flex gap-4 overflow-hidden">
-                    <div className="flex flex-col gap-4 p-2">
+                <div className="flex flex-col overflow-hidden gap-3">
+                    <div className="flex items-center gap-4 text-muted-foreground">
+                        <Icon className="text-2xl" icon="tabler:category" />
                         <FormField
-                            key="name"
+                            key="categoryId"
                             control={form.control}
-                            name="name"
+                            name="categoryId"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Name</FormLabel>
                                         <FormControl>
-                                            <Input
-                                                placeholder="Trip to Walmart"
-                                                type="text"
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            key="store"
-                            control={form.control}
-                            name="store"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Store</FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                placeholder="Walmart"
-                                                type="text"
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            key="creationDate"
-                            control={form.control}
-                            name="creationDate"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Creation Date</FormLabel>
-                                        <FormControl>
-                                            <DatePicker
-                                                date={field.value}
-                                                onChange={(e) => field.onChange(e)}
+                                            <Combobox
+                                                button={true}
+                                                options={categories}
+                                                subject="category"
+                                                value={field.value}
+                                                onChange={field.onChange}
+                                                create={() => setCategoryCreationDialog(true)}
                                             />
                                         </FormControl>
                                     <FormMessage />
@@ -180,58 +178,115 @@ export default function ReceiptForm({
                             )}
                         />
                     </div>
-                    <span className="bg-border w-[1px] h-full"></span>
-                    <div className="flex gap-4 flex-1 overflow-y-auto p-2">
-                        <FormField
-                            key="purchases"
-                            control={form.control}
-                            name="purchases"
-                            render={({ field }) => (
-                                <FormItem className='flex flex-col w-full overflow-hidden'>
-                                    <FormLabel>Purchases</FormLabel>
-                                    <FormControl>
-                                        <ListObjectInput
-                                            value={field.value}
-                                            onChange={(v: any) => 
-                                                field.onChange(v.map((pur: any) => ({ ...pur, price: pur.quantity * pur.unitPrice })))
-                                            }
-                                            onInputChange={(key: string, v: any, currentItem: any) => {
-                                                if (key === "quantity" || key === "unitPrice") {
-                                                    let missingPiece = key === "quantity" ? "unitPrice" : "quantity";
-                                                    if (currentItem[missingPiece] && v) {
-                                                        return {
-                                                            ...currentItem,
-                                                            [key]: v,
-                                                            price: currentItem[missingPiece] * v
-                                                        };
+                    <div className="flex gap-4 overflow-hidden">
+                        <div className="flex flex-col gap-4 p-2">
+                            <FormField
+                                key="name"
+                                control={form.control}
+                                name="name"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Name</FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    placeholder="Trip to Walmart"
+                                                    type="text"
+                                                    {...field}
+                                                />
+                                            </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                key="store"
+                                control={form.control}
+                                name="store"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Store</FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    placeholder="Walmart"
+                                                    type="text"
+                                                    {...field}
+                                                />
+                                            </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                key="creationDate"
+                                control={form.control}
+                                name="creationDate"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Creation Date</FormLabel>
+                                            <FormControl>
+                                                <DatePicker
+                                                    date={field.value}
+                                                    onChange={(e) => field.onChange(e)}
+                                                />
+                                            </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                        <span className="bg-border w-[1px] h-full"></span>
+                        <div className="flex gap-4 flex-1 overflow-y-auto p-2">
+                            <FormField
+                                key="purchases"
+                                control={form.control}
+                                name="purchases"
+                                render={({ field }) => (
+                                    <FormItem className='flex flex-col w-full overflow-hidden'>
+                                        <FormLabel>Purchases</FormLabel>
+                                        <FormControl>
+                                            <ListObjectInput
+                                                value={field.value}
+                                                onChange={(v: any) => 
+                                                    field.onChange(v.map((pur: any) => ({ ...pur, price: pur.quantity * pur.unitPrice })))
+                                                }
+                                                onInputChange={(key: string, v: any, currentItem: any) => {
+                                                    if (key === "quantity" || key === "unitPrice") {
+                                                        let missingPiece = key === "quantity" ? "unitPrice" : "quantity";
+                                                        if (currentItem[missingPiece] && v) {
+                                                            return {
+                                                                ...currentItem,
+                                                                [key]: v,
+                                                                price: currentItem[missingPiece] * v
+                                                            };
+                                                        }
+                                                        return { ...currentItem, [key]: v, price: 0 };
                                                     }
-                                                    return { ...currentItem, [key]: v, price: 0 };
-                                                }
-                                            }}
-                                            fieldDefs={[
-                                                { field: 'quantity', label: 'Quantity', type: 'number', placeholder: 'Enter quantity',
-                                                    render: (value: any) => parseFloat(value).toFixed(2)
-                                                },
-                                                { field: 'unitPrice', label: 'Unit Price', type: 'number', placeholder: 'Enter unit price',
-                                                    render: (value: any) => parseFloat(value).toFixed(2)
-                                                },
-                                                { field: 'price', label: 'Price', type: 'number', placeholder: 'Enter price',
-                                                    render: (value: any) => parseFloat(value).toFixed(2)
-                                                 },
-                                                { field: 'itemId', label: 'Item', type: 'combobox', 
-                                                    inputProps: {
-                                                        subject: 'item',
-                                                        options: items,
-                                                        create: () => setDialog(true)
+                                                }}
+                                                fieldDefs={[
+                                                    { field: 'quantity', label: 'Quantity', type: 'number', placeholder: 'Enter quantity',
+                                                        render: (value: any) => parseFloat(value).toFixed(2)
                                                     },
-                                                    render: (value: any) => (items.find((i: any) => i.value === value) as any)?.label, 
-                                                }
-                                            ]}
-                                        />
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        />
+                                                    { field: 'unitPrice', label: 'Unit Price', type: 'number', placeholder: 'Enter unit price',
+                                                        render: (value: any) => parseFloat(value).toFixed(2)
+                                                    },
+                                                    { field: 'price', label: 'Price', type: 'number', placeholder: 'Enter price',
+                                                        render: (value: any) => parseFloat(value).toFixed(2)
+                                                    },
+                                                    { field: 'itemId', label: 'Item', type: 'combobox', 
+                                                        inputProps: {
+                                                            subject: 'item',
+                                                            options: items,
+                                                            create: () => setDialog(true)
+                                                        },
+                                                        render: (value: any) => (items.find((i: any) => i.value === value) as any)?.label, 
+                                                    }
+                                                ]}
+                                            />
+                                        </FormControl>
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
                     </div>
                 </div>
             </form>
@@ -248,6 +303,20 @@ export default function ReceiptForm({
                 fields={createItemFormShape.form.fields as FieldDefinition[]}
                 defaultValues={selectedItem}
                 formSchema={createItemFormShape.form.formSchema}
+            />
+        </Dialog>
+
+        <Dialog
+            title={createCategoryFormShape.dialog.title}
+            description={createCategoryFormShape.dialog.description}
+            open={categoryCreationDialog}
+            onOpenChange={setCategoryCreationDialog}
+        >
+            <Form
+                callback={(v) => onCreateCategory(v)}
+                fields={createCategoryFormShape.form.fields as FieldDefinition[]}
+                defaultValues={{ name: '', entity: "receipt" }}
+                formSchema={createCategoryFormShape.form.formSchema}
             />
         </Dialog>
 

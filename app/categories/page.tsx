@@ -47,7 +47,7 @@ export default function CategoriesPage() {
     ]
 
     const fetchDeps = async () => {
-        setCategories(await getCategories());
+        setCategories(await getCategories({ entity: "item" }));
     }
 
     useEffect(() => {

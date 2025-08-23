@@ -1,7 +1,7 @@
 "use client"
 
 import Page from "@/app/components/Page";
-import ReceiptForm from "../../components/receipts/ReceiptForm";
+import ReceiptForm from "@/app/components/receipts/ReceiptForm";
 import { createReceipt } from "@/data/receipts";
 
 export default function CreateReceipt() {
