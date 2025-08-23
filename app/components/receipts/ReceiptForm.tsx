@@ -41,7 +41,7 @@ export default function ReceiptForm({
     const [items, setItems] = useState([]);
     const [categories, setCategories] = useState([]);
     const [dialog, setDialog] = useState(false);
-    const [categoryCreationDialog, setCategoryCreationDialog] = useState(false);
+    const [categoryCreationDialog, setCategoryCreationDialog] = useState<{ res(value: unknown): void } | null>(null);
     const [selectedItem, setSelectedItem] = useState<{ name: string, categoryId: number | undefined, category: { name: '', entity: string } }>({ name: '', categoryId: undefined, category: { name: '', entity: "receipt" } });
     const [receiptCreated, setReceiptCreated] = useState<boolean>(false);
     const form = useForm<z.infer<typeof receiptFormSchema>>({
@@ -76,8 +76,12 @@ export default function ReceiptForm({
         const result = await createCategory(data);
 
         if (result) {
-            setCategoryCreationDialog(false);
-            fetchDeps();
+            setCategoryCreationDialog(null);
+            await fetchDeps();
+        }
+
+        if (categoryCreationDialog !== null) {
+            categoryCreationDialog?.res(result.id ?? null);
         }
     }
 
@@ -170,7 +174,11 @@ export default function ReceiptForm({
                                                 subject="category"
                                                 value={field.value}
                                                 onChange={field.onChange}
-                                                create={() => setCategoryCreationDialog(true)}
+                                                create={() => {
+                                                    return new Promise((res) => {
+                                                        setCategoryCreationDialog({ res });
+                                                    })
+                                                }}
                                             />
                                         </FormControl>
                                     <FormMessage />
@@ -309,8 +317,8 @@ export default function ReceiptForm({
         <Dialog
             title={createCategoryFormShape.dialog.title}
             description={createCategoryFormShape.dialog.description}
-            open={categoryCreationDialog}
-            onOpenChange={setCategoryCreationDialog}
+            open={categoryCreationDialog !== null}
+            onOpenChange={() => setCategoryCreationDialog(null)}
         >
             <Form
                 callback={(v) => onCreateCategory(v)}

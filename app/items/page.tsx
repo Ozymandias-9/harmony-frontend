@@ -2,21 +2,23 @@
 
 import React, { useState, useEffect } from "react"
 import { getItems, createItem, updateItemCategory, deleteItemById, updateItemById } from "@/data/items"
-import { getCategories } from "@/data/categories"
+import { getCategories, createCategory } from "@/data/categories"
 import Page from "@/app/components/Page";
 import { Icon } from "@iconify/react";
 import { DataTable } from "@/components/ui/data-table";
 import { Dialog } from "../components/Dialog";
 import { Button } from "@/components/ui/button";
-import { Form } from "../components/Form";
+import { Form, type FieldDefinition } from "../components/Form";
 import { itemFormSchema } from "@/data/schemas/item";
-import { Combobox } from "../components/Combobox"; 
+import { Combobox } from "../components/Combobox";
+import { categoryFormSchema } from "@/data/schemas/category";
 
 export default function ItemsPage() {
     const [items, setItems] = useState([]);
     const [categories, setCategories] = useState([]);
     const [dialog, setDialog] = useState(false);
     const [dialogSchema, setDialogSchema] = useState<{ dialog: any, form: any }>({ dialog: {}, form: {} });
+    const [categoryCreationDialog, setCategoryCreationDialog] = useState<{ res(value: unknown): void } | null>(null);
     const [deleteConfirmationDialog, setDeleteConfirmationDialog] = useState(false);
     const [selectedItem, setSelectedItem] = useState<{ id?: number, name: string, categoryId?: number, category: { name: '' } }>({ name: '', categoryId: undefined, category: { name: '' } });
     const columns = [
@@ -47,6 +49,11 @@ export default function ItemsPage() {
                         if (result) {
                             setItems(await getItems());
                         }
+                    }}
+                    create={() => {
+                        return new Promise((res) => {
+                            setCategoryCreationDialog({ res });
+                        })
                     }}
                 />;
             },
@@ -106,6 +113,19 @@ export default function ItemsPage() {
         if (result) {
             setDeleteConfirmationDialog(false);
             fetchDeps();
+        }
+    }
+
+    const onCreateCategory = async (data: any) => {
+        const result = await createCategory(data);
+
+        if (result) {
+            setCategoryCreationDialog(null);
+            await fetchDeps();
+        }
+
+        if (categoryCreationDialog !== null) {
+            categoryCreationDialog?.res(result.id ?? null);
         }
     }
     
@@ -169,6 +189,25 @@ export default function ItemsPage() {
         }
     }
 
+    const createCategoryFormShape = {
+        dialog: {
+            title: 'Create Category',
+            description: 'Create a category for your items.',
+        },
+        form: {
+            mutationType: 'create',
+            fields: [
+                {
+                    label: 'Name',
+                    field: 'name',
+                    placeholder: "Health",
+                    type: 'text',
+                },
+            ],
+            formSchema: categoryFormSchema,
+        }
+    }
+
     const dialogSchemas: { 'create': any, 'edit': any } = {
         'create': createItemFormShape,
         'edit': editItemFormShape,
@@ -208,6 +247,22 @@ export default function ItemsPage() {
                 formSchema={dialogSchema.form.formSchema}
             />
         </Dialog>
+
+
+        <Dialog
+            title={createCategoryFormShape.dialog.title}
+            description={createCategoryFormShape.dialog.description}
+            open={categoryCreationDialog !== null}
+            onOpenChange={() => setCategoryCreationDialog(null)}
+        >
+            <Form
+                callback={(v) => onCreateCategory(v)}
+                fields={createCategoryFormShape.form.fields as FieldDefinition[]}
+                defaultValues={{ name: '', entity: "item" }}
+                formSchema={createCategoryFormShape.form.formSchema}
+            />
+        </Dialog>
+
         <Dialog
             title="Confirmation"
             description="Are you sure you want to delete this item?"

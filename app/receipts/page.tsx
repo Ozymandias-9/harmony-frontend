@@ -2,7 +2,7 @@
 
 import React, { Fragment, useEffect, useState } from "react"
 import { getReceipts, deleteReceiptById, updateReceiptCategory } from "@/data/receipts"
-import { getCategories } from "@/data/categories";
+import { getCategories, createCategory } from "@/data/categories";
 import Page from "@/app/components/Page";
 import { Icon } from "@iconify/react";
 import { DataTable } from "@/components/ui/data-table";
@@ -15,6 +15,8 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable"
+import { Form, type FieldDefinition } from "@/app/components/Form";
+import { categoryFormSchema } from "@/data/schemas/category";
 
 export default function ReceiptsPage() {
     const router = useRouter();
@@ -23,6 +25,7 @@ export default function ReceiptsPage() {
     const [categories, setCategories] = useState([]);
     const [selectedReceipt, setSelectedReceipt] = useState<any>(null);
     const [selectedReceiptForDeletion, setSelectedReceiptForDeletion] = useState<any>(null);
+    const [categoryCreationDialog, setCategoryCreationDialog] = useState<{ res(value: unknown): void } | null>(null);
     const [deleteConfirmationDialog, setDeleteConfirmationDialog] = useState(false);
     const columns = [
         {
@@ -57,6 +60,11 @@ export default function ReceiptsPage() {
                         if (result) {
                             setReceipts(await getReceipts());
                         }
+                    }}
+                    create={() => {
+                        return new Promise((res) => {
+                            setCategoryCreationDialog({ res });
+                        })
                     }}
                 />;
             },
@@ -128,9 +136,41 @@ export default function ReceiptsPage() {
         setCategories((await getCategories({ entity: "receipt" })).map((c: any) => ({ value: c.id, label: c.name })));
     }
 
+    const onCreateCategory = async (data: any) => {
+        const result = await createCategory(data);
+
+        if (result) {
+            setCategoryCreationDialog(null);
+            await fetchDeps();
+        }
+
+        if (categoryCreationDialog !== null) {
+            categoryCreationDialog?.res(result.id ?? null);
+        }
+    }
+
     useEffect(() => {
         fetchDeps();
     }, [])
+
+    const createCategoryFormShape = {
+        dialog: {
+            title: 'Create Category',
+            description: 'Create a category for your items.',
+        },
+        form: {
+            mutationType: 'create',
+            fields: [
+                {
+                    label: 'Name',
+                    field: 'name',
+                    placeholder: "Health",
+                    type: 'text',
+                },
+            ],
+            formSchema: categoryFormSchema,
+        }
+    }
 
     return <Page title="Receipts">
         <div className="flex flex-col gap-3 overflow-hidden">
@@ -198,6 +238,19 @@ export default function ReceiptsPage() {
             </ResizablePanelGroup>
         </div>
 
+        <Dialog
+            title={createCategoryFormShape.dialog.title}
+            description={createCategoryFormShape.dialog.description}
+            open={categoryCreationDialog !== null}
+            onOpenChange={() => setCategoryCreationDialog(null)}
+        >
+            <Form
+                callback={(v) => onCreateCategory(v)}
+                fields={createCategoryFormShape.form.fields as FieldDefinition[]}
+                defaultValues={{ name: '', entity: "receipt" }}
+                formSchema={createCategoryFormShape.form.formSchema}
+            />
+        </Dialog>
 
         <Dialog
             title="Confirmation"

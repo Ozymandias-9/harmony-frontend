@@ -60,7 +60,10 @@ export function Combobox({
             <CommandGroup>
               {
                 create ? <CommandItem
-                  onSelect={() => create()}
+                  onSelect={async () => {
+                    onChange(await create());
+                    setOpen(false);
+                  }}
                 >
                   <span className="flex items-center gap-2 text-muted-foreground"><Icon icon="lucide:plus"/> Create new {subject}</span>
                 </CommandItem> : null
