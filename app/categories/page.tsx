@@ -12,7 +12,8 @@ import { categoryFormSchema } from "@/data/schemas/category";
 import { createCategory, updateCategoryById, deleteCategoryById } from "@/data/categories";
 
 export default function CategoriesPage() {
-    const [categories, setCategories] = useState([]);
+    const [selectedType, setSelectedType] = useState<string>("item")
+    const [categories, setCategories] = useState<{ [key: string]: Array<any> }>({ item: [], receipt: [] });
     const [dialog, setDialog] = useState(false);
     const [dialogSchema, setDialogSchema] = useState<{ dialog: any, form: any }>({ dialog: {}, form: {} });
     const [deleteConfirmationDialog, setDeleteConfirmationDialog] = useState(false);
@@ -46,8 +47,17 @@ export default function CategoriesPage() {
         }
     ]
 
-    const fetchDeps = async () => {
-        setCategories(await getCategories({ entity: "item" }));
+    const switchEntity = (entity: string) => {
+        setSelectedType(entity);
+
+        console.log(categories)
+        if (categories[entity].length === 0) {
+            fetchDeps(entity);
+        }
+    }
+
+    const fetchDeps = async (entity?: string) => {
+        setCategories({ ...categories, [entity ?? 'item']: (await getCategories({ entity: entity ?? selectedType })) ?? [] });
     }
 
     useEffect(() => {
@@ -136,7 +146,16 @@ export default function CategoriesPage() {
 
     return <Page title="Categories">
         <div className="overflow-y-auto flex flex-col gap-3">
-            <div className="flex justify-end">
+            <div className="flex justify-between">
+                <div className="flex gap-2 text-muted-foreground">
+                    {
+                        ["item", "receipt"].map((entity, index) => {
+                            return <div key={index} onClick={() => switchEntity(entity)} className={`flex px-2 items-center capitalize border-b-2 ${ entity === selectedType ? 'border-primary text-primary' : 'border-transparent' }`}>
+                                { entity }
+                            </div>
+                        })
+                    }
+                </div>
                 <Button onClick={() => triggerMutationDialog(true, 'create')}>
                     <span className="size-4 aspect-square">
                         <Icon icon="lucide:plus" />
@@ -145,7 +164,7 @@ export default function CategoriesPage() {
             </div>
             <DataTable
                 columns={columns}
-                data={categories}
+                data={categories[selectedType]}
             />
         </div>
 
