@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from "react"
-import { getItems, createItem, updateItemCategory, deleteItemById, updateItemById } from "@/data/items"
+import { getItems, createItem, updateItemCategory, deleteItemById, updateItemById, disconnectCategoryFromItem } from "@/data/items"
 import { getCategories, createCategory } from "@/data/categories"
 import Page from "@/app/components/Page";
 import { Icon } from "@iconify/react";
@@ -20,7 +20,7 @@ export default function ItemsPage() {
     const [dialogSchema, setDialogSchema] = useState<{ dialog: any, form: any }>({ dialog: {}, form: {} });
     const [categoryCreationDialog, setCategoryCreationDialog] = useState<{ res(value: unknown): void } | null>(null);
     const [deleteConfirmationDialog, setDeleteConfirmationDialog] = useState(false);
-    const [selectedItem, setSelectedItem] = useState<{ id?: number, name: string, categoryId?: number, category: { name: '' } }>({ name: '', categoryId: undefined, category: { name: '' } });
+    const [selectedItem, setSelectedItem] = useState<{ id?: number, name: string, categories: Array<any> }>({ name: '', categories: [] });
     const columns = [
         {
             accessorKey: 'id',
@@ -34,28 +34,39 @@ export default function ItemsPage() {
             sortable: true,
         },
         {
-            accessorKey: 'category',
+            accessorKey: 'categories',
             header: 'Category',
             cell: ({ row }: any) => {
                 const data = row.original;
-                return <Combobox
-                    className={`px-2 py-1 text-xs rounded-md bg-accent text-foreground ${!data?.category?.id ? 'text-gray-400 hover:text-gray-600' : 'hover:text-gray-600'} cursor-pointer`}
-                    subject="category"
-                    options={categories}
-                    value={data?.category?.id ?? null}
-                    onChange={async (newValue) => {
-                        const result = await updateItemCategory(row.original.id, parseInt(newValue));
+                return <div className="flex gap-1">
+                    <Combobox
+                        className={`px-2 py-1 text-xs rounded-md bg-accent text-foreground ${data?.categories.length === 0 ? 'text-gray-400 hover:text-gray-600' : 'hover:text-gray-600'} cursor-pointer`}
+                        subject="category"
+                        options={categories}
+                        value={null}
+                        onChange={async (newValue) => {
+                            const result = await updateItemCategory(row.original.id, parseInt(newValue));
 
-                        if (result) {
-                            setItems(await getItems());
-                        }
-                    }}
-                    create={() => {
-                        return new Promise((res) => {
-                            setCategoryCreationDialog({ res });
+                            if (result) {
+                                setItems(await getItems());
+                            }
+                        }}
+                        create={() => {
+                            return new Promise((res) => {
+                                setCategoryCreationDialog({ res });
+                            })
+                        }}
+                        hideSubjectFromButton={!(data.categories.length > 0)}
+                    />
+                    {
+                        data.categories.map((category: any) => {
+                            return <span key={category.id} className="flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-accent text-foreground hover:text-gray-600 cursor-pointer">
+                                <Icon onClick={() => onDisconnectCategory(data.id, category.id)} icon="lucide:x"/>
+                                <span>{ category.name }</span>
+                            </span>
                         })
-                    }}
-                />;
+                    }
+                </div>;
             },
             accessorFn: (originalRow: any) => originalRow.category?.name,
         },
@@ -128,6 +139,15 @@ export default function ItemsPage() {
             categoryCreationDialog?.res(result.id ?? null);
         }
     }
+
+    const onDisconnectCategory = async (id: number, categoryId: number) => {
+        const result = await disconnectCategoryFromItem(id, categoryId);
+        
+        if (result) {
+            setCategoryCreationDialog(null);
+            await fetchDeps();
+        }
+    }
     
     const createItemFormShape = {
         dialog: {
@@ -144,17 +164,14 @@ export default function ItemsPage() {
                     type: 'text',
                 },
                 {
-                    type: "createOrConnect",
-                    field: "categoryId",
-                    label: "Category",
+                    type: "combobox",
+                    field: "categories",
+                    label: "Categories",
+                    multiple: true,
                     inputProps: {
                         subject: 'category',
                         options: categories
                     },
-                    createKey: 'category',
-                    createFields: [
-                        { field: "name", label: "Name", type: "text", placeholder: "New category name" }
-                    ]
                 },
             ],
             formSchema: itemFormSchema,
@@ -177,8 +194,9 @@ export default function ItemsPage() {
                 },
                 {
                     type: "combobox",
-                    field: "categoryId",
-                    label: "Category",
+                    field: "categories",
+                    label: "Categories",
+                    multiple: true,
                     inputProps: {
                         subject: 'category',
                         options: categories
@@ -213,8 +231,9 @@ export default function ItemsPage() {
         'edit': editItemFormShape,
     }
 
-    const triggerMutationDialog = (open: boolean, dType: 'create' | 'edit', data: any = { name: '', categoryId: undefined, category: { name: '' } },) => {
-        setSelectedItem(data);
+    const triggerMutationDialog = (open: boolean, dType: 'create' | 'edit', data: any = { name: '', categories: [] },) => {
+        const newData = data.categories.length > 0 ? { ...data, categories: data.categories.map((c: any) => c.id) } : data;
+        setSelectedItem(newData);
         setDialogSchema(dialogSchemas[dType])
         setDialog(open);
     }

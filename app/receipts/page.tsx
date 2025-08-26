@@ -1,7 +1,7 @@
 'use client'
 
 import React, { Fragment, useEffect, useState } from "react"
-import { getReceipts, deleteReceiptById, updateReceiptCategory } from "@/data/receipts"
+import { getReceipts, deleteReceiptById, updateReceiptCategory, disconnectCategoryFromReceipt } from "@/data/receipts"
 import { getCategories, createCategory } from "@/data/categories";
 import Page from "@/app/components/Page";
 import { Icon } from "@iconify/react";
@@ -45,28 +45,39 @@ export default function ReceiptsPage() {
             sortable: true,
         },
         {
-            accessorKey: 'category',
+            accessorKey: 'categories',
             header: 'Category',
             cell: ({ row }: any) => {
                 const data = row.original;
-                return <Combobox
-                    className={`px-2 py-1 text-xs rounded-md bg-accent text-foreground ${!data?.category?.id ? 'text-gray-400 hover:text-gray-600' : 'hover:text-gray-600'} cursor-pointer`}
-                    subject="category"
-                    options={categories}
-                    value={data?.category?.id ?? null}
-                    onChange={async (newValue) => {
-                        const result = await updateReceiptCategory(row.original.id, parseInt(newValue));
+                return <div className="flex gap-1">
+                    <Combobox
+                        className={`px-2 py-1 text-xs rounded-md bg-accent text-foreground ${data?.categories.length === 0 ? 'text-gray-400 hover:text-gray-600' : 'hover:text-gray-600'} cursor-pointer`}
+                        subject="category"
+                        options={categories}
+                        value={null}
+                        onChange={async (newValue) => {
+                            const result = await updateReceiptCategory(row.original.id, parseInt(newValue));
 
-                        if (result) {
-                            setReceipts(await getReceipts());
-                        }
-                    }}
-                    create={() => {
-                        return new Promise((res) => {
-                            setCategoryCreationDialog({ res });
+                            if (result) {
+                                setReceipts(await getReceipts());
+                            }
+                        }}
+                        create={() => {
+                            return new Promise((res) => {
+                                setCategoryCreationDialog({ res });
+                            })
+                        }}
+                        hideSubjectFromButton={!(data.categories.length > 0)}
+                    />
+                    {
+                        data.categories.map((category: any) => {
+                            return <span key={category.id} className="flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-accent text-foreground hover:text-gray-600 cursor-pointer">
+                                <Icon onClick={() => onDisconnectCategory(data.id, category.id)} icon="lucide:x"/>
+                                <span>{ category.name }</span>
+                            </span>
                         })
-                    }}
-                />;
+                    }
+                </div>;
             },
             accessorFn: (originalRow: any) => originalRow.category?.name,
         },
@@ -149,6 +160,15 @@ export default function ReceiptsPage() {
         }
     }
 
+    const onDisconnectCategory = async (id: number, categoryId: number) => {
+        const result = await disconnectCategoryFromReceipt(id, categoryId);
+        
+        if (result) {
+            setCategoryCreationDialog(null);
+            await fetchDeps();
+        }
+    }
+
     useEffect(() => {
         fetchDeps();
     }, [])
@@ -193,7 +213,7 @@ export default function ReceiptsPage() {
                     selectedReceipt && (
                         <Fragment>
                             <ResizableHandle className="mx-4" withHandle />
-                            <ResizablePanel className="bg-background relative flex-1 flex flex-col p-4 rounded-lg border gap-2 overflow-hidden">
+                            <ResizablePanel defaultSize={40} className="bg-background relative flex-1 flex flex-col p-4 rounded-lg border gap-2 overflow-hidden">
                                 <Icon onClick={() => setSelectedReceipt(null)} className="size-6 absolute top-4 right-4 cursor-pointer" icon="lucide:x"/>
                                 <div className="flex flex-col gap-1">
                                     <h2 className="text-gray-800">{ selectedReceipt?.name }</h2>

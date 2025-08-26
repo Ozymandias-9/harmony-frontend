@@ -26,7 +26,7 @@ export function Combobox({
   onChange,
   subject,
   create,
-  remove = false,
+  hideSubjectFromButton = true,
 }: {
   button?: boolean,
   className?: string,
@@ -35,7 +35,7 @@ export function Combobox({
   onChange: (value: string) => void;
   create?: (x?: any) => any,
   subject: string,
-  remove?: boolean,
+  hideSubjectFromButton?: boolean,
 }) {
   const [open, setOpen] = React.useState(false);
 
@@ -46,9 +46,15 @@ export function Combobox({
       <PopoverTrigger asChild>
         {
           button ? <Button variant="outline" className={className ?? 'w-[150px] justify-start'}>
-            {selectedOption ? <>{selectedOption.label}</> : <>+ { subject.replace(/\b\w/g, char => char.toUpperCase()) }</>}
+            {selectedOption ? <>{selectedOption.label}</> : <div className={`h-full flex items-center ${hideSubjectFromButton ? "gap-1" : ""}`}>
+              <Icon icon="lucide:plus" />
+              <span>{ hideSubjectFromButton ? subject.replace(/\b\w/g, char => char.toUpperCase()) : "" }</span>
+            </div>}
           </Button> : <span className={className ?? 'w-[150px] justify-start'}>
-            {selectedOption ? <>{selectedOption.label}</> : <>+ { subject.replace(/\b\w/g, char => char.toUpperCase()) }</>}
+            {selectedOption ? <>{selectedOption.label}</> : <div className={`h-full flex items-center ${hideSubjectFromButton ? "gap-1" : ""}`}>
+              <Icon icon="lucide:plus" />
+              <span>{ hideSubjectFromButton ? subject.replace(/\b\w/g, char => char.toUpperCase()) : "" }</span>
+            </div>}
           </span>
         }
       </PopoverTrigger>

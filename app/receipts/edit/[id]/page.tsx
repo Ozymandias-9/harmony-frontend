@@ -18,7 +18,10 @@ export default function EditReceipt() {
         if (receiptId) {
             async function init() {
                 const result = (await getReceiptById(receiptId))[0];
-                setReceipt({ ...result, creationDate: new Date(result.creationDate)
+                setReceipt({
+                    ...result,
+                    creationDate: new Date(result.creationDate),
+                    categories: result.categories.map((category: any) => category.id)
                 });
             }
 

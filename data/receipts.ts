@@ -12,10 +12,6 @@ async function getReceiptById(id: number) {
     return await (new ApiCall()).get(`receipts/${id}`).send();
 }
 
-async function updateReceiptById(id: number, body: any) {
-    return await (new ApiCall()).put(`receipts/${id}`).send(body);
-}
-
 async function updateReceiptCategory(receiptId: number, categoryId: number) {
     return await (new ApiCall()).put(`receipts/${receiptId}/category/${categoryId}`).send();
 }
@@ -24,11 +20,20 @@ async function deleteReceiptById(id: number) {
     return await (new ApiCall()).delete(`receipts/${id}`).send();
 }
 
+async function updateReceiptById(id: number, body: any) {
+    return await (new ApiCall()).put(`receipts/${id}`).send(body);
+}
+
+async function disconnectCategoryFromReceipt(receiptId: number, categoryId: number) {
+    return await (new ApiCall()).delete(`receipts/${receiptId}/category/${categoryId}`).send();
+}
+
 export {
     getReceipts,
     createReceipt,
     getReceiptById,
     updateReceiptById,
-    updateReceiptCategory,
     deleteReceiptById,
+    updateReceiptCategory,
+    disconnectCategoryFromReceipt,
 }

@@ -42,11 +42,11 @@ export default function ReceiptForm({
     const [categories, setCategories] = useState([]);
     const [dialog, setDialog] = useState(false);
     const [categoryCreationDialog, setCategoryCreationDialog] = useState<{ res(value: unknown): void } | null>(null);
-    const [selectedItem, setSelectedItem] = useState<{ name: string, categoryId: number | undefined, category: { name: '', entity: string } }>({ name: '', categoryId: undefined, category: { name: '', entity: "receipt" } });
+    const [selectedItem, setSelectedItem] = useState<{ name: string, categories: number[] }>({ name: '', categories: [] });
     const [receiptCreated, setReceiptCreated] = useState<boolean>(false);
     const form = useForm<z.infer<typeof receiptFormSchema>>({
         resolver: zodResolver(receiptFormSchema),
-        defaultValues: defaultValues ?? { name: '', store: '', creationDate: new Date(), purchases: [] },
+        defaultValues: defaultValues ?? { name: '', categories: [], store: '', creationDate: new Date(), purchases: [] },
     });
 
     async function fetchDeps() {
@@ -92,7 +92,7 @@ export default function ReceiptForm({
     
     const continueHere = () => {
         setReceiptCreated(false);
-        setSelectedItem({ name: '', categoryId: undefined, category: { name: '', entity: "receipt" } });
+        setSelectedItem({ name: '', categories: [] });
         form.reset();
     }
 
@@ -110,17 +110,14 @@ export default function ReceiptForm({
                     type: 'text',
                 },
                 {
-                    type: "createOrConnect",
-                    field: "categoryId",
-                    label: "Category",
+                    type: "combobox",
+                    field: "categories",
+                    label: "Categories",
+                    multiple: true,
                     inputProps: {
                         subject: 'category',
                         options: categories
                     },
-                    createKey: 'category',
-                    createFields: [
-                        { field: "name", label: "Name", type: "text", placeholder: "New category name" }
-                    ]
                 },
             ],
             formSchema: itemFormSchema,
@@ -162,26 +159,52 @@ export default function ReceiptForm({
                     <div className="flex items-center gap-4 text-muted-foreground">
                         <Icon className="text-2xl" icon="tabler:category" />
                         <FormField
-                            key="categoryId"
+                            key="categories"
                             control={form.control}
-                            name="categoryId"
+                            name="categories"
                             render={({ field }) => (
-                                <FormItem>
-                                        <FormControl>
-                                            <Combobox
-                                                button={true}
-                                                options={categories}
-                                                subject="category"
-                                                value={field.value}
-                                                onChange={field.onChange}
-                                                create={() => {
-                                                    return new Promise((res) => {
-                                                        setCategoryCreationDialog({ res });
-                                                    })
-                                                }}
-                                            />
-                                        </FormControl>
+                                <FormItem className="flex gap-1">
+                                    <FormControl>
+                                        <Combobox
+                                            button={true}
+                                            options={categories}
+                                            subject="category"
+                                            value={field.value}
+                                            onChange={(v) =>
+                                            field.onChange(
+                                                Array.from(new Set([...(field.value ?? []), v])),
+                                                field
+                                            )
+                                            }
+                                            create={() => {
+                                                return new Promise((res) => {
+                                                    setCategoryCreationDialog({ res });
+                                                })
+                                            }}
+                                        />
+                                    </FormControl>
                                     <FormMessage />
+                                    {
+                                        categories.length > 0 && <div className="flex gap-2">
+                                            {field.value?.map((value: any) => {
+                                                console.log(field.value, value)
+                                                return (
+                                                <span
+                                                    key={value}
+                                                    onClick={() => field.onChange(field.value?.filter((v: any) => v !== value))}
+                                                    className="flex gap-0.5 items-center px-2 py-1 text-xs rounded-md bg-accent text-foreground hover:text-gray-600 cursor-pointer"
+                                                >
+                                                    <Icon icon="lucide:x"/>
+                                                    {
+                                                        (categories.find(
+                                                            (option: any) => option.value === value
+                                                        ) as any).label
+                                                    }
+                                                </span>
+                                                );
+                                            })}
+                                        </div>
+                                    }
                                 </FormItem>
                             )}
                         />

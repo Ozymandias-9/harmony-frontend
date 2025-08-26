@@ -19,10 +19,12 @@ export function CreateOrConnectInput({
   form,
   fieldDef,
   inputProps,
+  multiple = false,
 }: {
   form: any,
   fieldDef: any,
   inputProps?: any;
+  multiple: boolean,
 }) {
   const [mode, setMode] = useState<"connect" | "create">('connect');
 
@@ -117,18 +119,29 @@ export function CreateOrConnectInput({
             key={fieldDef.field}
             control={form.control}
             name={fieldDef.field as any}
-            render={({ field }) => (
-              <FormItem>
+            render={({ field }) => {
+              return <FormItem>
                 <FormControl>
                   <Combobox
                     button={true}
                     {...inputProps}
                     value={field.value}
-                    onChange={(v) => handleConnectChange(v, field)}
+                    onChange={(v) => handleConnectChange(multiple ? Array.from(new Set([...field.value, v])) : v, field)}
                   />
                 </FormControl>
+                {
+                  multiple && <div className="flex gap-2">
+                    {
+                      field.value.map((value: any) => {
+                        return <span key={value} className="px-2 py-1 text-xs rounded-md bg-accent text-foreground hover:text-gray-600 cursor-pointer">
+                          { (inputProps.options.find((option: any) => option.value === value))?.label }
+                        </span>;
+                      })
+                    }
+                  </div>
+                }
               </FormItem>
-            )}
+            }}
           />
         )
       }
